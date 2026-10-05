@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>CodeJump has moved</title>
+<link rel="canonical" href="https://codejump.co.uk/">
+<style>
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#1b1b1f;color:#f3efe6;
+    font:600 18px/1.5 Montserrat,system-ui,-apple-system,"Segoe UI",sans-serif;text-align:center;padding:16px;box-sizing:border-box}
+  h1{font-size:28px;color:#ae853e;margin:0 0 8px}
+  a{color:#ae853e}
+</style>
+</head>
+<body>
+<main>
+  <h1>CodeJump has moved!</h1>
+  <p>Taking you to <a id="go" href="https://codejump.co.uk/">codejump.co.uk</a>…</p>
+  <p id="note"></p>
+</main>
+<script>
+// CodeJump moved from codejump.primarycodingleague.co.uk to codejump.co.uk (Oct 2026). This page answers every address
+// on the old site (it is also 404.html) and sends people to the same page and link on the new one.
+// Browsers keep each address's storage apart, so on a device's first visit it also uploads this browser's CodeJump storage
+// (saved games, draft, settings, sign-in) to the CodeJump cloud for a one-time code, and the new address picks it up
+// from ?cjmove=<code>. After that it just redirects.
+(function () {
+  var NEW = 'https://codejump.co.uk', CLOUD = 'https://codejump-cloud.primarycodingleague.workers.dev';
+  var target = NEW + location.pathname + location.search + location.hash;
+  document.getElementById('go').href = target;
+  function go(code) { var u = new URL(target); if (code) u.searchParams.set('cjmove', code); location.replace(u.href); }
+  var data = {}, n = 0;
+  try {
+    if (localStorage.getItem('cj_moved')) { go(); return; }
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (/^(bap_|cj-)/.test(k)) { data[k] = localStorage.getItem(k); n++; }
+    }
+  } catch (e) { go(); return; }
+  if (!n) { go(); return; }
+  document.getElementById('note').textContent = 'Bringing your saved games with you…';
+  var done = false, timer = setTimeout(function () { if (!done) { done = true; go(); } }, 8000);
+  function finish(code) { if (done) return; done = true; clearTimeout(timer); if (code) { try { localStorage.setItem('cj_moved', code); } catch (e) {} } go(code); }
+  fetch(CLOUD + '/move', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: data }) })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) { finish(d && d.code); })
+    .catch(function () { finish(null); });
+})();
+</script>
+</body>
+</html>
